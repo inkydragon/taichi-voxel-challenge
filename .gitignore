@@ -1,7 +1,17 @@
-.idea
-*.pyc
-outputs
+# IDE
+.idea/
+.vscode/
+
+# macOS
 .DS_Store
+
+# python
+*.pyc
 imgui.ini
+
+# dir
+outputs
+
+# others
 .*.swp
-.idea
+screenshot*.jpg
