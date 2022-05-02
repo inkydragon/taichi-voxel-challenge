@@ -23,6 +23,7 @@ Camera:
 MAT_LAMBERTIAN = 1
 MAT_LIGHT = 2
 
+
 class Camera:
     def __init__(self, window, up):
         self._window = window
@@ -125,6 +126,9 @@ class Scene:
                                  exposure=exposure)
 
         self.renderer.set_camera_pos(*self.camera.position)
+
+        if not os.path.exists('screenshot'):
+            os.makedirs('screenshot')
 
     @staticmethod
     @ti.func
