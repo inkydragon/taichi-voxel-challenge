@@ -74,5 +74,6 @@ def initialize_voxels():
         scene.set_voxel(ivec3(0, -y, 0), mat, col)
 
 
-initialize_voxels()
-scene.finish()
+if __name__ == '__main__':
+    initialize_voxels()
+    scene.finish()
