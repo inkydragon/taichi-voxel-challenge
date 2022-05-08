@@ -45,8 +45,9 @@ def is_in_grid(p):
 
 @ti.func  # Input [0, 128) grid => set vox in [-64, 64)
 def fill(p, mat=SOLID_MAT, col=GRAY):
-    assert is_in_grid(p)
-    scene.set_voxel(p - HALF_GRID, mat, col)
+    # assert is_in_grid(p)
+    # scene.set_voxel(p - HALF_GRID, mat, col)
+    scene.set_voxel(p, mat, col)
 
 
 @ti.func  # remove vox
@@ -71,6 +72,24 @@ def fill_shell(x, y, mat, col):
     fill_box(x, y, mat, col)
     slice_box(x+1, y-1)
 
+@ti.func  # 圆形去除. x: 圆心, r: 半径
+def slice_xy_circle(c, r):
+    x_lo, x_hi = ti.floor(c.x - r), ti.floor(c.x + r)
+    y_lo, y_hi = ti.floor(c.y - r), ti.floor(c.y + r)
+    z0 = c.z
+    for x, y in ti.ndrange((x_lo, x_hi+1), (y_lo, y_hi+1)):
+        if (x*x+y*y) <= r*r:
+            remove(vec3(x, y, z0))
+
+@ti.func  # z 轴圆台（圆锥）去除. (c0, r0) 圆台底面, (c1, r1) 圆台顶部
+def slice_x_cone(c0, r0, c1, r1):
+    assert c0.z >= c1.z
+    _steps = c0.z - c1.z + 1
+    for _step_i in ti.ndrange((0, _steps)):
+        a = _step_i*1.0 / _steps
+        c = mix(c1, c0, a)
+        r = mix(r1, r0, a)
+        slice_xy_circle(c, r)
 
 # ==== Main loop
 @ti.kernel
@@ -82,6 +101,9 @@ def initialize_voxels():
     # fill_box(ivec3(HALF_GRID, 0, HALF_GRID), ivec3(HALF_GRID, 64, HALF_GRID), LIGHT_MAT, RED)
     for y in ti.ndrange(64):
         scene.set_voxel(ivec3(0, -y, 0), LIGHT_MAT, RED)
+    slice_xy_circle(vec3(0,0,63), 60)
+    slice_x_cone(vec3(0,0,63), 60, vec3(0,0,-60), 2)
+
 
 
 if __name__ == '__main__':
