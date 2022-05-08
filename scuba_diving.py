@@ -63,27 +63,6 @@ def heart_slice_wall(z, r=55):
         i, j = x/r*4, y/r*4
         if (17*i*i - 16*abs(i)*j + 17*j*j) >= 225:
             fill(vec3(x, y, z), mat=SOLID_MAT, col=black_block)
-# shark
-shark = '獴,㐴煳,㌴桳,㈴晲,ㄴ摱,〴捰,⤴䍃慰,⠴䍄恩,✵䉅奩,☶䉆塨,⌷䅈坧,ᡑ噧,ᑦ,ቦ,ၥ,ॕ塤,ࡒ奤,'
-shark += 'ء⌣═恣,ԡ⌣╉恣,И†∢⑅慢,Ș†∢⑃慢,Ę†⌣╀扢,ġ⌣┷,Ȇࠈတሴ,܇उᄲ,࠱,ဩ,ᠨ,⌧,⌧,\u2427,┧,┧,☧,✧'
-
-@ti.func  # Input [0, 128) grid => set vox in [-64, 64)
-def draw_shark(p0):
-    x_ranges = shark.split(',')
-    for y in range(34):
-        s, e = 0, 0
-        for c in x_ranges[y]:
-            e0 = e
-            # print(f"{c} ", end='')
-            s, e = int(hex(ord(c) >> 8)[2:]), int(hex(ord(c) & 0xFF)[2:])
-            # print(f"\\u{s:02d}{e:02d} ", end='')
-            for x in range(e0, s):
-                # print('  ', end='')
-                pass
-            for x in range(s, e):
-                # print('██', end='')
-                fill(p0 + vec3(x, -y, 0), mat=SOLID_MAT, col=vec3(0))
-        print()
 
 
 # ==== Main loop
@@ -92,30 +71,7 @@ def initialize_voxels():
     z_grad_fill_box(ivec3(-62), ivec3(62), LIGHT_MAT)
     slice_x_cone(c0=vec3(0, 0, 63), r0=60, c1=vec3(0, 0, -61), r1=1)
     heart_slice_wall(63)
-    draw_shark(vec3(0, 0, 63))
 
 
 initialize_voxels()
 scene.finish()
-
-##
-a2=[]
-l=[]
-for y in range(38):
-    l.append([])
-    s, e = -1, -1
-    for x in range(76):
-        ly = l[y]
-        if a2[y][x]==1:
-            if s == -1:
-                s = x
-                e = x
-            else:
-                e = x
-            # print('██', end='')
-        else:
-            if s != -1 and e != -1:
-                print(f"\\u{s:02d}{e:02d} ", end='')
-                s, e = -1, -1
-            # print('  ', end='')
-    print()
