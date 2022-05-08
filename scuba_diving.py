@@ -7,31 +7,20 @@ CLEAR_MAT = 0
 SOLID_MAT = 1
 LIGHT_MAT = 2
 
-
 # ---- 场景设置
-scene = Scene(voxel_edges=0.06, exposure=1)
-# scene.set_directional_light((1, 1, 1), 0.1, (1, 1, 1))
-# scene.set_background_color((0.3, 0.4, 0.6))
+scene = Scene(voxel_edges=0, exposure=1)
 scene.set_floor(-64, (1, 1, 1))
-
 
 # Color
 @ti.func
 def rgb(r, g, b):
     return vec3(r/255.0, g/255.0, b/255.0)
-
-
 @ti.func  # Input [0, 128) grid => set vox in [-64, 64)
 def fill(p, mat=SOLID_MAT, col=vec3(0.8)):
-    # scene.set_voxel(p - HALF_GRID, mat, col)
     scene.set_voxel(p, mat, col)
-
-
 @ti.func  # remove vox
 def remove(p):
     fill(p, mat=CLEAR_MAT)
-
-
 @ti.func  # z 轴颜色渐变填充
 def z_grad_fill_box(x, y, mat):
     col0 = rgb(3, 58, 80)
@@ -49,8 +38,6 @@ def z_grad_fill_box(x, y, mat):
         else:  # a in [col_rate, 1.0]
             alpha = 1.0 - ((a-col_rate)/(1-col_rate))
             fill(vec3(i, j, k), mat, mix(col0, col1, alpha))
-
-
 @ti.func  # 圆形去除. x: 圆心, r: 半径
 def slice_xy_circle(c, r):
     x_lo, x_hi = ti.floor(c.x - r), ti.floor(c.x + r)
@@ -59,8 +46,6 @@ def slice_xy_circle(c, r):
     for x, y in ti.ndrange((x_lo, x_hi+1), (y_lo, y_hi+1)):
         if (x*x+y*y) <= r*r:
             remove(vec3(x, y, z0))
-
-
 @ti.func  # z 轴圆台（圆锥）去除. (c0, r0) 圆台底面, (c1, r1) 圆台顶部
 def slice_x_cone(c0, r0, c1, r1):
     assert c0.z >= c1.z
@@ -70,14 +55,67 @@ def slice_x_cone(c0, r0, c1, r1):
         c = mix(c1, c0, a)
         r = mix(r1, r0, a)
         slice_xy_circle(c, r)
+@ti.func
+def heart_slice_wall(z, r=55):
+    N = 63
+    black_block = vec3(0)
+    for x, y in ti.ndrange((-N, N), (-N, N)):
+        i, j = x/r*4, y/r*4
+        if (17*i*i - 16*abs(i)*j + 17*j*j) >= 225:
+            fill(vec3(x, y, z), mat=SOLID_MAT, col=black_block)
+# shark
+shark = '獴,㐴煳,㌴桳,㈴晲,ㄴ摱,〴捰,⤴䍃慰,⠴䍄恩,✵䉅奩,☶䉆塨,⌷䅈坧,ᡑ噧,ᑦ,ቦ,ၥ,ॕ塤,ࡒ奤,'
+shark += 'ء⌣═恣,ԡ⌣╉恣,И†∢⑅慢,Ș†∢⑃慢,Ę†⌣╀扢,ġ⌣┷,Ȇࠈတሴ,܇उᄲ,࠱,ဩ,ᠨ,⌧,⌧,\u2427,┧,┧,☧,✧'
+
+@ti.func  # Input [0, 128) grid => set vox in [-64, 64)
+def draw_shark(p0):
+    x_ranges = shark.split(',')
+    for y in range(34):
+        s, e = 0, 0
+        for c in x_ranges[y]:
+            e0 = e
+            # print(f"{c} ", end='')
+            s, e = int(hex(ord(c) >> 8)[2:]), int(hex(ord(c) & 0xFF)[2:])
+            # print(f"\\u{s:02d}{e:02d} ", end='')
+            for x in range(e0, s):
+                # print('  ', end='')
+                pass
+            for x in range(s, e):
+                # print('██', end='')
+                fill(p0 + vec3(x, -y, 0), mat=SOLID_MAT, col=vec3(0))
+        print()
 
 
 # ==== Main loop
 @ti.kernel
 def initialize_voxels():
     z_grad_fill_box(ivec3(-62), ivec3(62), LIGHT_MAT)
-    slice_x_cone(c0=vec3(0, 0, 63), r0=40, c1=vec3(0, 0, -63), r1=10)
+    slice_x_cone(c0=vec3(0, 0, 63), r0=60, c1=vec3(0, 0, -61), r1=1)
+    heart_slice_wall(63)
+    draw_shark(vec3(0, 0, 63))
 
 
 initialize_voxels()
 scene.finish()
+
+##
+a2=[]
+l=[]
+for y in range(38):
+    l.append([])
+    s, e = -1, -1
+    for x in range(76):
+        ly = l[y]
+        if a2[y][x]==1:
+            if s == -1:
+                s = x
+                e = x
+            else:
+                e = x
+            # print('██', end='')
+        else:
+            if s != -1 and e != -1:
+                print(f"\\u{s:02d}{e:02d} ", end='')
+                s, e = -1, -1
+            # print('  ', end='')
+    print()
