@@ -5,7 +5,7 @@ from taichi.math import *
 # ==== Constant Def ====
 # --- Grid Const
 MIN_GRID_IDX = 0
-MAX_GRID_IDX = 128
+MAX_GRID_IDX = 64
 HALF_GRID = MAX_GRID_IDX / 2
 
 # --- Material Constant
@@ -23,7 +23,6 @@ RED = ivec3(255, 0, 0) / 255
 scene = Scene(exposure=1)
 scene.set_directional_light((1, 1, 1), 0.1, (1, 1, 1))
 scene.set_background_color((0.3, 0.4, 0.6))
-scene.set_floor(-64, (1, 1, 1))
 
 
 # Color
@@ -43,10 +42,10 @@ def is_in_grid(p):
     return any(MIN_GRID_IDX <= p < MAX_GRID_IDX)
 
 
-@ti.func  # Input [0, 128) grid => set vox in [-64, 64)
+@ti.func
 def fill(p, mat=SOLID_MAT, col=GRAY):
     assert is_in_grid(p)
-    scene.set_voxel(p - HALF_GRID, mat, col)
+    scene.set_voxel(p, mat, col)
 
 
 @ti.func  # remove vox
@@ -77,11 +76,11 @@ def fill_shell(x, y, mat, col):
 def initialize_voxels():
     mat = SOLID_MAT
     col = gray(200)
-    fill_shell(ivec3(0), ivec3(127), mat, col)
-    slice_box(ivec3(0, 0, 127), ivec3(127))
+    fill_shell(ivec3(0), ivec3(63), mat, col)
+    slice_box(ivec3(0, 0, 63), ivec3(63))
     # fill_box(ivec3(HALF_GRID, 0, HALF_GRID), ivec3(HALF_GRID, 64, HALF_GRID), LIGHT_MAT, RED)
-    for y in ti.ndrange(64):
-        scene.set_voxel(ivec3(0, -y, 0), LIGHT_MAT, RED)
+    for y in ti.ndrange(32):
+        scene.set_voxel(ivec3(32, y, 32), LIGHT_MAT, RED)
 
 
 if __name__ == '__main__':
